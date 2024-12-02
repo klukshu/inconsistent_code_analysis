@@ -3,14 +3,16 @@ import 'package:flutter/foundation.dart' show immutable;
 import '../auth_user.dart';
 
 @immutable
-sealed class AuthState {
-  const AuthState({required this.isLoading, this.loadingText = 'Loading...'});
+abstract class AuthState {
+
   final bool isLoading;
   final String? loadingText;
+  const AuthState({required this.isLoading, this.loadingText = 'Loading...'});
 }
 
 final class AuthUninitialized extends AuthState {
-  const AuthUninitialized({required super.isLoading});
+  const AuthUninitialized({required bool isLoading})
+      : super(isLoading: isLoading);
 }
 
 final class AuthLoggedIn extends AuthState {
@@ -19,7 +21,7 @@ final class AuthLoggedIn extends AuthState {
 }
 
 final class AuthLoginFailure extends AuthState {
-  const AuthLoginFailure({required super.isLoading, required this.exception});
+  const AuthLoginFailure(e, {required super.isLoading, required this.exception});
   final Exception exception;
 }
 
@@ -28,7 +30,7 @@ final class AuthNeedsVerification extends AuthState {
 }
 
 final class AuthLoggedOut extends AuthState {
-  const AuthLoggedOut({required this.exception, required super.isLoading});
+  const AuthLoggedOut({ this.exception, required super.isLoading});
   final Exception? exception;
 }
 
@@ -38,7 +40,7 @@ class AuthSelectingAuthForNewAccount extends AuthState {
 
 class AuthRegisteringEmail extends AuthState {
   const AuthRegisteringEmail(
-      {required super.isLoading, required this.exception});
+      {required super.isLoading, this.exception});
   final Exception? exception;
 }
 

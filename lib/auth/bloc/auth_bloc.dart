@@ -5,8 +5,11 @@ import '../auth_user.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
+
+
+
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  AuthBloc(AuthProvider provider) : super(const AuthUninitialized({isLoading: true})) {
+  AuthBloc(AuthProvider provider) : super(AuthUninitialized(isLoading: true)) {
     on<AuthInitialize>((AuthInitialize event, Emitter<AuthState> emit) async {
       await provider.initialize();
       final AuthUser? user = provider.currentUser;
@@ -27,28 +30,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         final AuthUser user =
             await provider.logInWithEmail(email: email, password: password);
-        emit(AuthLoggedIn(user));
+        emit(AuthLoggedIn(isLoading:true, user:user));
       } on Exception catch (e) {
-        emit(AuthLoginFailure(e));
+        emit(AuthLoginFailure(e,isLoading: false, exception: GenericAuthException()));
       }
     });
 
     on<AuthChooseEmail>((AuthChooseEmail event, Emitter<AuthState> emit) {
       if (state is AuthSelectingAuthForNewAccount) {
-        emit(const AuthRegisteringEmail());
+        emit(const AuthRegisteringEmail(isLoading: true));
       }
       if (state is AuthLoggedOut) {
-        emit(const AuthLoggingInEmail());
+        emit(const AuthLoggingInEmail(isLoading: true));
       } else {
         throw GenericAuthException();
       }
     });
     on<AuthChooseSMS>((AuthChooseSMS event, Emitter<AuthState> emit) {
       if (state is AuthSelectingAuthForNewAccount) {
-        emit(const AuthRegisteringSMS());
+        emit(const AuthRegisteringSMS(isLoading: true));
       }
       if (state is AuthLoggedOut) {
-        emit(const AuthLoggingInSMS());
+        emit(const AuthLoggingInSMS(isLoading: true));
       } else {
         throw GenericAuthException();
       }
@@ -58,11 +61,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final email = event.email;
       try {
         await provider.createNewAccountWithEmail(
-            email: event.email, password: event.password);
+            email: email, password: event.password);
         await provider.sendVerificationEmail();
         emit(AuthNeedsVerification(isLoading: false));
       } on Exception catch (e) {
-        emit(AuthRegisteringEmail(exception: e))
+        emit(AuthRegisteringEmail(exception: e, isLoading: false));
       }
     });
 
@@ -75,10 +78,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLogOut>((AuthLogOut event, Emitter<AuthState> emit) async {
       await provider.logOut();
 
-      emit(AuthLoggedOut());
+      emit(const AuthLoggedOut(isLoading: false));
     });
     on<AuthShouldRegister>((AuthShouldRegister event, Emitter<AuthState> emit) {
-      emit(AuthSelectingAuthForNewAccount());
+      emit(const AuthSelectingAuthForNewAccount(isLoading: true));
     });
   }
 }
